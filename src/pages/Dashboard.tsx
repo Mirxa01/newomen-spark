@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/ui/loading-skeleton";
 import { Mic, Calendar, Brain, Sparkles, Clock, ArrowRight, Crown } from "lucide-react";
 
 export default function Dashboard() {
@@ -23,9 +24,7 @@ export default function Dashboard() {
   if (loading || !profile) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
-          <div className="animate-pulse text-muted-foreground">Loading your dashboard...</div>
-        </div>
+        <PageLoader />
       </Layout>
     );
   }

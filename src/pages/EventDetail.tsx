@@ -131,12 +131,12 @@ export default function EventDetail() {
       });
 
       navigate("/dashboard");
-    } catch (err: any) {
+    } catch (err) {
       console.error("Booking error:", err);
       toast({
         variant: "destructive",
         title: "Booking failed",
-        description: err.message || "Please try again or contact support.",
+        description: err instanceof Error ? err.message : "Please try again or contact support.",
       });
     } finally {
       setIsBooking(false);
@@ -174,7 +174,7 @@ export default function EventDetail() {
         title: "Thank you!",
         description: "We'll contact you soon about membership options.",
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error("Lead submission error:", err);
       toast({
         variant: "destructive",

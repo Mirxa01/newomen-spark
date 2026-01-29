@@ -20,6 +20,7 @@ interface Profile {
   onboarding_step: number;
   memory_consent: boolean;
   psychological_profile: Record<string, unknown>;
+  created_at: string;
 }
 
 interface Subscription {
