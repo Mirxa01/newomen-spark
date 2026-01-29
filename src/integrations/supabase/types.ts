@@ -132,6 +132,7 @@ export type Database = {
           amount_paid: number | null
           created_at: string
           event_id: string
+          expires_at: string | null
           id: string
           is_member_access: boolean | null
           payment_id: string | null
@@ -145,6 +146,7 @@ export type Database = {
           amount_paid?: number | null
           created_at?: string
           event_id: string
+          expires_at?: string | null
           id?: string
           is_member_access?: boolean | null
           payment_id?: string | null
@@ -158,6 +160,7 @@ export type Database = {
           amount_paid?: number | null
           created_at?: string
           event_id?: string
+          expires_at?: string | null
           id?: string
           is_member_access?: boolean | null
           payment_id?: string | null
@@ -460,6 +463,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_lead: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
