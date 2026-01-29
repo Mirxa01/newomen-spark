@@ -14,16 +14,469 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      assessment_results: {
+        Row: {
+          answers: Json | null
+          assessment_id: string
+          created_at: string
+          follow_up_prompts: Json | null
+          id: string
+          result_narrative: string | null
+          saved_to_memory: boolean | null
+          scores: Json | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          answers?: Json | null
+          assessment_id: string
+          created_at?: string
+          follow_up_prompts?: Json | null
+          id?: string
+          result_narrative?: string | null
+          saved_to_memory?: boolean | null
+          scores?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          answers?: Json | null
+          assessment_id?: string
+          created_at?: string
+          follow_up_prompts?: Json | null
+          id?: string
+          result_narrative?: string | null
+          saved_to_memory?: boolean | null
+          scores?: Json | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_results_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessments: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          questions: Json | null
+          questions_count: number | null
+          result_narratives: Json | null
+          scoring_logic: Json | null
+          short_description: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          visibility:
+            | Database["public"]["Enums"]["assessment_visibility"]
+            | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          questions?: Json | null
+          questions_count?: number | null
+          result_narratives?: Json | null
+          scoring_logic?: Json | null
+          short_description?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          visibility?:
+            | Database["public"]["Enums"]["assessment_visibility"]
+            | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          questions?: Json | null
+          questions_count?: number | null
+          result_narratives?: Json | null
+          scoring_logic?: Json | null
+          short_description?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          visibility?:
+            | Database["public"]["Enums"]["assessment_visibility"]
+            | null
+        }
+        Relationships: []
+      }
+      event_bookings: {
+        Row: {
+          amount_paid: number | null
+          created_at: string
+          event_id: string
+          id: string
+          is_member_access: boolean | null
+          payment_id: string | null
+          payment_status: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          ticket_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string
+          event_id: string
+          id?: string
+          is_member_access?: boolean | null
+          payment_id?: string | null
+          payment_status?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          ticket_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_member_access?: boolean | null
+          payment_id?: string | null
+          payment_status?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          ticket_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          date: string
+          description: string | null
+          end_date: string | null
+          gallery_images: string[] | null
+          id: string
+          image_url: string | null
+          is_online: boolean | null
+          location: string | null
+          member_free_access: boolean | null
+          price: number | null
+          short_description: string | null
+          spots_taken: number | null
+          status: Database["public"]["Enums"]["event_status"] | null
+          tags: string[] | null
+          title: string
+          transformation_only: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          date: string
+          description?: string | null
+          end_date?: string | null
+          gallery_images?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_online?: boolean | null
+          location?: string | null
+          member_free_access?: boolean | null
+          price?: number | null
+          short_description?: string | null
+          spots_taken?: number | null
+          status?: Database["public"]["Enums"]["event_status"] | null
+          tags?: string[] | null
+          title: string
+          transformation_only?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string | null
+          date?: string
+          description?: string | null
+          end_date?: string | null
+          gallery_images?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_online?: boolean | null
+          location?: string | null
+          member_free_access?: boolean | null
+          price?: number | null
+          short_description?: string | null
+          spots_taken?: number | null
+          status?: Database["public"]["Enums"]["event_status"] | null
+          tags?: string[] | null
+          title?: string
+          transformation_only?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      membership_leads: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["lead_status"] | null
+          updated_at: string
+          whatsapp_number: string
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          updated_at?: string
+          whatsapp_number: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_leads_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_questions: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_required: boolean | null
+          options: Json | null
+          order_index: number | null
+          question_text: string
+          question_type: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_required?: boolean | null
+          options?: Json | null
+          order_index?: number | null
+          question_text: string
+          question_type?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_required?: boolean | null
+          options?: Json | null
+          order_index?: number | null
+          question_text?: string
+          question_type?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          cultural_preferences: Json | null
+          date_of_birth: string | null
+          full_name: string | null
+          horoscope_sign: string | null
+          id: string
+          intensity_preference:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          language: string | null
+          memory_consent: boolean | null
+          nickname: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          psychological_profile: Json | null
+          updated_at: string
+          user_id: string
+          voice_minutes_used: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          cultural_preferences?: Json | null
+          date_of_birth?: string | null
+          full_name?: string | null
+          horoscope_sign?: string | null
+          id?: string
+          intensity_preference?:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          language?: string | null
+          memory_consent?: boolean | null
+          nickname?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          psychological_profile?: Json | null
+          updated_at?: string
+          user_id: string
+          voice_minutes_used?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          cultural_preferences?: Json | null
+          date_of_birth?: string | null
+          full_name?: string | null
+          horoscope_sign?: string | null
+          id?: string
+          intensity_preference?:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          language?: string | null
+          memory_consent?: boolean | null
+          nickname?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          psychological_profile?: Json | null
+          updated_at?: string
+          user_id?: string
+          voice_minutes_used?: number | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          paypal_subscription_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+          voice_minutes_limit: number | null
+          voice_minutes_used: number | null
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paypal_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+          voice_minutes_limit?: number | null
+          voice_minutes_used?: number | null
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paypal_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+          voice_minutes_limit?: number | null
+          voice_minutes_used?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin" | "super_admin"
+      assessment_visibility: "public" | "authenticated" | "members_only"
+      booking_status: "pending" | "confirmed" | "cancelled" | "attended"
+      event_status: "draft" | "published" | "cancelled" | "completed"
+      intensity_preference: "soft" | "direct" | "no_mercy"
+      lead_status: "new" | "contacted" | "converted" | "declined"
+      subscription_status: "active" | "cancelled" | "expired" | "pending"
+      subscription_tier: "discovery" | "growth" | "transformation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +603,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin", "super_admin"],
+      assessment_visibility: ["public", "authenticated", "members_only"],
+      booking_status: ["pending", "confirmed", "cancelled", "attended"],
+      event_status: ["draft", "published", "cancelled", "completed"],
+      intensity_preference: ["soft", "direct", "no_mercy"],
+      lead_status: ["new", "contacted", "converted", "declined"],
+      subscription_status: ["active", "cancelled", "expired", "pending"],
+      subscription_tier: ["discovery", "growth", "transformation"],
+    },
   },
 } as const
