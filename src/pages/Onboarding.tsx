@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getSupabase } from "@/lib/supabase";
+import { getErrorMessage } from "@/lib/validation";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Globe, User, Calendar, Brain, Flame, Shield } from "lucide-react";
 
 interface OnboardingStep {
@@ -158,7 +159,7 @@ export default function Onboarding() {
       toast({
         variant: "destructive",
         title: "Something went wrong",
-        description: "Please try again.",
+        description: getErrorMessage(err),
       });
     } finally {
       setIsLoading(false);

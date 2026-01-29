@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/ui/Logo";
@@ -19,6 +20,7 @@ import {
   FileText,
   Image,
   MessageSquare,
+  ShieldAlert,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -35,24 +37,50 @@ const sidebarItems = [
 
 export default function AdminLayout() {
   const { user, profile, signOut, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useAdminRole();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/login");
+    // Wait for both auth and role check to complete
+    if (loading || roleLoading) {
+      return;
     }
-    // In production, check for admin role here
-  }, [user, loading, navigate]);
+
+    // Redirect to login if not authenticated
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    // Redirect to dashboard if not admin
+    if (!isAdmin) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, roleLoading, isAdmin, navigate]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return <PageLoader />;
+  }
+
+  // Don't render admin panel if not admin (redirect will happen via useEffect)
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <ShieldAlert className="h-16 w-16 text-destructive mx-auto" />
+          <h1 className="text-2xl font-bold">Access Denied</h1>
+          <p className="text-muted-foreground">You don't have permission to access this area.</p>
+          <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
