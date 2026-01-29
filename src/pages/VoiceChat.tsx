@@ -149,10 +149,15 @@ export default function VoiceChat() {
     }
   };
 
+  // Generate unique message ID
+  const generateMessageId = () => {
+    return crypto.randomUUID();
+  };
+
   // Add a message from the assistant
   const addAssistantMessage = (content: string) => {
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: "assistant",
       content,
       timestamp: new Date(),
@@ -164,7 +169,7 @@ export default function VoiceChat() {
   // Add a message from the user
   const addUserMessage = (content: string) => {
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       role: "user",
       content,
       timestamp: new Date(),
@@ -516,6 +521,7 @@ export default function VoiceChat() {
                     variant="outline"
                     size="icon"
                     onClick={() => setIsMuted(!isMuted)}
+                    aria-label={isMuted ? "Unmute" : "Mute"}
                   >
                     {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                   </Button>
@@ -532,7 +538,21 @@ export default function VoiceChat() {
                     onMouseLeave={() => isRecording && stopRecording()}
                     onTouchStart={startRecording}
                     onTouchEnd={stopRecording}
+                    onKeyDown={(e) => {
+                      if ((e.key === " " || e.key === "Enter") && !isRecording) {
+                        e.preventDefault();
+                        startRecording();
+                      }
+                    }}
+                    onKeyUp={(e) => {
+                      if ((e.key === " " || e.key === "Enter") && isRecording) {
+                        e.preventDefault();
+                        stopRecording();
+                      }
+                    }}
                     disabled={isProcessing || voiceMinutesRemaining <= 0}
+                    aria-label={isRecording ? "Release to stop recording" : "Hold to record"}
+                    aria-pressed={isRecording}
                   >
                     {isRecording ? (
                       <MicOff className="h-8 w-8" />

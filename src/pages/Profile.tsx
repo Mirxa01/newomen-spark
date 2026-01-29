@@ -11,6 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getSupabase } from "@/lib/supabase";
@@ -123,10 +134,6 @@ export default function Profile() {
 
   const handleDeleteMemories = async () => {
     if (!user) return;
-    
-    if (!confirm("Are you sure you want to delete all your conversation memories? This cannot be undone.")) {
-      return;
-    }
 
     setIsDeletingData(true);
     try {
@@ -393,6 +400,9 @@ export default function Profile() {
                     onCheckedChange={setMemoryConsent}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Changes to this setting will only affect future messages.
+                </p>
 
                 <Separator />
 
@@ -408,21 +418,43 @@ export default function Profile() {
                           Permanently remove all your conversation history and patterns.
                         </p>
                       </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleDeleteMemories}
-                        disabled={isDeletingData}
-                      >
-                        {isDeletingData ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </>
-                        )}
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={isDeletingData}
+                          >
+                            {isDeletingData ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </>
+                            )}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete All Memories?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. All your conversation history, 
+                              patterns, and memories will be permanently removed. NewMe will 
+                              no longer have context from your previous sessions.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDeleteMemories}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
+                              Delete All Memories
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
 
