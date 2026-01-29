@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getSupabase } from "@/lib/supabase";
+import { membershipLeadSchema, getErrorMessage, sanitizeString } from "@/lib/validation";
 import { Calendar, MapPin, Users, Clock, ArrowLeft, Crown, Phone, Check, Loader2 } from "lucide-react";
 
 // Mock event data (will be replaced with real data)
@@ -86,6 +87,7 @@ export default function EventDetail() {
   const [isBooking, setIsBooking] = useState(false);
   const [isMembershipFormOpen, setIsMembershipFormOpen] = useState(false);
   const [membershipForm, setMembershipForm] = useState({ fullName: "", whatsapp: "" });
+  const [formErrors, setFormErrors] = useState<{ fullName?: string; whatsapp?: string }>({});
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
 
@@ -136,7 +138,7 @@ export default function EventDetail() {
       toast({
         variant: "destructive",
         title: "Booking failed",
-        description: err instanceof Error ? err.message : "Please try again or contact support.",
+        description: getErrorMessage(err),
       });
     } finally {
       setIsBooking(false);
@@ -144,12 +146,25 @@ export default function EventDetail() {
   };
 
   const handleMembershipLead = async () => {
-    if (!membershipForm.fullName.trim() || !membershipForm.whatsapp.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Please fill all fields",
-        description: "We need your name and WhatsApp number to contact you.",
+    // Clear previous errors
+    setFormErrors({});
+
+    // Sanitize inputs
+    const sanitizedData = {
+      fullName: sanitizeString(membershipForm.fullName),
+      whatsapp: sanitizeString(membershipForm.whatsapp),
+    };
+
+    // Validate with zod schema
+    const validationResult = membershipLeadSchema.safeParse(sanitizedData);
+    
+    if (!validationResult.success) {
+      const errors: { fullName?: string; whatsapp?: string } = {};
+      validationResult.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof typeof errors;
+        errors[field] = err.message;
       });
+      setFormErrors(errors);
       return;
     }
 
@@ -161,8 +176,8 @@ export default function EventDetail() {
       }
 
       const { error } = await supabase.from("membership_leads").insert({
-        full_name: membershipForm.fullName.trim(),
-        whatsapp_number: membershipForm.whatsapp.trim(),
+        full_name: validationResult.data.fullName,
+        whatsapp_number: validationResult.data.whatsapp,
         event_id: event.id,
         source: "event_page",
       });
@@ -179,7 +194,7 @@ export default function EventDetail() {
       toast({
         variant: "destructive",
         title: "Submission failed",
-        description: "Please try again or contact us on WhatsApp: 510522089",
+        description: getErrorMessage(err),
       });
     } finally {
       setIsSubmittingLead(false);
@@ -349,8 +364,17 @@ export default function EventDetail() {
                                 id="fullName"
                                 placeholder="Your full name"
                                 value={membershipForm.fullName}
-                                onChange={(e) => setMembershipForm({ ...membershipForm, fullName: e.target.value })}
+                                onChange={(e) => {
+                                  setMembershipForm({ ...membershipForm, fullName: e.target.value });
+                                  if (formErrors.fullName) {
+                                    setFormErrors({ ...formErrors, fullName: undefined });
+                                  }
+                                }}
+                                className={formErrors.fullName ? "border-destructive" : ""}
                               />
+                              {formErrors.fullName && (
+                                <p className="text-sm text-destructive mt-1">{formErrors.fullName}</p>
+                              )}
                             </div>
                             <div>
                               <Label htmlFor="whatsapp">WhatsApp Number</Label>
@@ -358,12 +382,20 @@ export default function EventDetail() {
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   id="whatsapp"
-                                  placeholder="+1 234 567 8900"
-                                  className="pl-10"
+                                  placeholder="+1234567890"
+                                  className={`pl-10 ${formErrors.whatsapp ? "border-destructive" : ""}`}
                                   value={membershipForm.whatsapp}
-                                  onChange={(e) => setMembershipForm({ ...membershipForm, whatsapp: e.target.value })}
+                                  onChange={(e) => {
+                                    setMembershipForm({ ...membershipForm, whatsapp: e.target.value });
+                                    if (formErrors.whatsapp) {
+                                      setFormErrors({ ...formErrors, whatsapp: undefined });
+                                    }
+                                  }}
                                 />
                               </div>
+                              {formErrors.whatsapp && (
+                                <p className="text-sm text-destructive mt-1">{formErrors.whatsapp}</p>
+                              )}
                             </div>
                             <Button
                               className="w-full bg-gradient-primary hover:opacity-90"
