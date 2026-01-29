@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { getSupabase } from "@/lib/supabase";
+import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import {
   User,
   Mail,
@@ -159,8 +160,8 @@ export default function Profile() {
   if (loading || !profile) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
-          <div className="animate-pulse text-muted-foreground">Loading profile...</div>
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <LoadingSkeleton variant="profile" />
         </div>
       </Layout>
     );

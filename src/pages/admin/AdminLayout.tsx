@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Logo } from "@/components/ui/Logo";
+import { PageLoader } from "@/components/ui/loading-skeleton";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -51,11 +52,7 @@ export default function AdminLayout() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

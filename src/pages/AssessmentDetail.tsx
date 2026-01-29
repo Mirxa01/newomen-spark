@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { PageLoader } from "@/components/ui/loading-skeleton";
 import { ArrowLeft, ArrowRight, Brain, Heart, Compass, Moon, Star, Sparkles, Clock, CheckCircle, Loader2 } from "lucide-react";
 
 // Color mappings for Tailwind (static classes for purging)
