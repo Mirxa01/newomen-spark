@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/lib/supabase";
 import { Calendar, MapPin, Users, Clock, ArrowLeft, Crown, Phone, Check, Loader2 } from "lucide-react";
 
 // Mock event data (will be replaced with real data)
@@ -106,6 +106,11 @@ export default function EventDetail() {
 
     setIsBooking(true);
     try {
+      const supabase = await getSupabase();
+      if (!supabase) {
+        throw new Error("Backend not configured");
+      }
+
       // For now, just create a pending booking
       // PayPal integration will be added later
       const { error } = await supabase.from("event_bookings").insert({
@@ -150,6 +155,11 @@ export default function EventDetail() {
 
     setIsSubmittingLead(true);
     try {
+      const supabase = await getSupabase();
+      if (!supabase) {
+        throw new Error("Backend not configured");
+      }
+
       const { error } = await supabase.from("membership_leads").insert({
         full_name: membershipForm.fullName.trim(),
         whatsapp_number: membershipForm.whatsapp.trim(),

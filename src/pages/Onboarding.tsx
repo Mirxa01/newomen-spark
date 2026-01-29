@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/lib/supabase";
 import { ArrowLeft, ArrowRight, Loader2, Sparkles, Globe, User, Calendar, Brain, Flame, Shield } from "lucide-react";
 
 interface OnboardingStep {
@@ -112,6 +112,11 @@ export default function Onboarding() {
 
     setIsLoading(true);
     try {
+      const supabase = await getSupabase();
+      if (!supabase) {
+        throw new Error("Backend not configured");
+      }
+
       const horoscope = dob ? calculateHoroscope(dob) : null;
       
       const { error } = await supabase
