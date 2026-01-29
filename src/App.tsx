@@ -14,6 +14,9 @@ import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import Membership from "./pages/Membership";
 import Assessments from "./pages/Assessments";
+import VoiceChat from "./pages/VoiceChat";
+import Profile from "./pages/Profile";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +37,9 @@ const App = () => (
             <Route path="/events/:id" element={<EventDetail />} />
             <Route path="/membership" element={<Membership />} />
             <Route path="/assessments" element={<Assessments />} />
+            <Route path="/chat" element={<VoiceChat />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/about" element={<About />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
