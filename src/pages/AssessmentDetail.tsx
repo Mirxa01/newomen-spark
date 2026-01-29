@@ -11,6 +11,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, ArrowRight, Brain, Heart, Compass, Moon, Star, Sparkles, Clock, CheckCircle, Loader2 } from "lucide-react";
 
+// Color mappings for Tailwind (static classes for purging)
+const colorClasses: Record<string, { bg: string; text: string }> = {
+  primary: { bg: "bg-primary/10", text: "text-primary" },
+  teal: { bg: "bg-teal/10", text: "text-teal" },
+  gold: { bg: "bg-gold/10", text: "text-gold" },
+  pink: { bg: "bg-pink/10", text: "text-pink" },
+  purple: { bg: "bg-purple/10", text: "text-purple" },
+  accent: { bg: "bg-accent/10", text: "text-accent" },
+};
+
 // Assessment data with questions
 const assessmentsData: Record<string, {
   id: string;
@@ -352,8 +362,8 @@ export default function AssessmentDetail() {
           // Assessment Intro
           <Card className="glass-card">
             <CardHeader className="text-center">
-              <div className={`w-16 h-16 rounded-2xl bg-${assessment.color}/10 flex items-center justify-center mx-auto mb-4`}>
-                <Icon className={`h-8 w-8 text-${assessment.color}`} />
+              <div className={`w-16 h-16 rounded-2xl ${colorClasses[assessment.color]?.bg || "bg-primary/10"} flex items-center justify-center mx-auto mb-4`}>
+                <Icon className={`h-8 w-8 ${colorClasses[assessment.color]?.text || "text-primary"}`} />
               </div>
               <CardTitle className="text-2xl font-display">{assessment.title}</CardTitle>
               <CardDescription className="text-base mt-2">

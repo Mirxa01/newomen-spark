@@ -14,6 +14,15 @@ import {
   Activity,
 } from "lucide-react";
 
+// Color mappings for Tailwind (static classes for purging)
+const colorClasses: Record<string, { bg: string; text: string }> = {
+  primary: { bg: "bg-primary/10", text: "text-primary" },
+  teal: { bg: "bg-teal/10", text: "text-teal" },
+  gold: { bg: "bg-gold/10", text: "text-gold" },
+  pink: { bg: "bg-pink/10", text: "text-pink" },
+  purple: { bg: "bg-purple/10", text: "text-purple" },
+};
+
 // Mock statistics data
 const stats = [
   {
@@ -102,8 +111,8 @@ export default function AdminDashboard() {
                       <span className="text-sm text-muted-foreground">vs last month</span>
                     </div>
                   </div>
-                  <div className={`w-12 h-12 rounded-xl bg-${stat.color}/10 flex items-center justify-center`}>
-                    <Icon className={`h-6 w-6 text-${stat.color}`} />
+                  <div className={`w-12 h-12 rounded-xl ${colorClasses[stat.color]?.bg || "bg-primary/10"} flex items-center justify-center`}>
+                    <Icon className={`h-6 w-6 ${colorClasses[stat.color]?.text || "text-primary"}`} />
                   </div>
                 </div>
               </CardContent>

@@ -75,6 +75,7 @@ export default function AdminLayout() {
             size="icon"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="ml-auto"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {sidebarCollapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -85,7 +86,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto" aria-label="Admin navigation">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href;
