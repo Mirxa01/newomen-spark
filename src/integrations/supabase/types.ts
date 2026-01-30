@@ -296,6 +296,44 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          saved_to_memory: boolean | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          saved_to_memory?: boolean | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          saved_to_memory?: boolean | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_questions: {
         Row: {
           category: string | null
@@ -392,6 +430,45 @@ export type Database = {
           updated_at?: string
           user_id?: string
           voice_minutes_used?: number | null
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          intensity_preference:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          started_at: string
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          intensity_preference?:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          started_at?: string
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          intensity_preference?:
+            | Database["public"]["Enums"]["intensity_preference"]
+            | null
+          started_at?: string
+          summary?: string | null
+          user_id?: string
         }
         Relationships: []
       }
