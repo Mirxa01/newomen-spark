@@ -1,0 +1,1 @@
+SELECT proname, proargnames, proargtypes FROM pg_proc WHERE proname = 'has_role';

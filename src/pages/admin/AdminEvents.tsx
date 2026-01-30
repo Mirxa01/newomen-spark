@@ -1,335 +1,577 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Search,
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  Calendar, 
+  MapPin, 
+  Users, 
+  Eye, 
+  Pencil, 
+  Trash2, 
+  Plus, 
   MoreHorizontal,
-  Plus,
-  Calendar,
-  MapPin,
-  Users,
-  Edit,
-  Trash2,
-  Eye,
-  Copy,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
+import { format } from "date-fns";
 
-// Mock events data
-const mockEvents = [
-  {
-    id: "1",
-    title: "Shadow Integration Workshop",
-    date: "2026-02-15",
-    time: "14:00",
-    location: "Online via Zoom",
-    capacity: 50,
-    booked: 38,
-    price: 49,
-    status: "published",
-    memberFree: false,
-  },
-  {
-    id: "2",
-    title: "Full Moon Transformation Circle",
-    date: "2026-02-12",
-    time: "20:00",
-    location: "Dubai, UAE",
-    capacity: 30,
-    booked: 22,
-    price: 75,
-    status: "published",
-    memberFree: false,
-  },
-  {
-    id: "3",
-    title: "Couples Compatibility Deep Dive",
-    date: "2026-02-20",
-    time: "18:00",
-    location: "Online via Zoom",
-    capacity: 20,
-    booked: 14,
-    price: 99,
-    status: "published",
-    memberFree: false,
-  },
-  {
-    id: "4",
-    title: "New Moon Manifestation",
-    date: "2026-02-28",
-    time: "19:00",
-    location: "Online via Zoom",
-    capacity: 100,
-    booked: 0,
-    price: 0,
-    status: "draft",
-    memberFree: true,
-  },
-];
+type Event = Tables<"events">;
 
 export default function AdminEvents() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    short_description: "",
+    date: "",
+    end_date: "",
+    location: "",
+    is_online: false,
+    capacity: 50,
+    price: 0,
+    currency: "USD",
+    image_url: "",
+    tags: [] as string[],
+    status: "draft" as "draft" | "published" | "cancelled" | "completed",
+    member_free_access: false,
+    transformation_only: false,
+  });
+  const [tagInput, setTagInput] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const filteredEvents = mockEvents.filter((event) =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch events",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const eventData = {
+        ...formData,
+        tags: formData.tags.filter(tag => tag.trim() !== ""),
+      };
+
+      if (editingEvent) {
+        const { error } = await supabase
+          .from("events")
+          .update(eventData)
+          .eq("id", editingEvent.id);
+
+        if (error) throw error;
+        toast({ title: "Event updated successfully" });
+      } else {
+        const { error } = await supabase
+          .from("events")
+          .insert([{ ...eventData, created_by: (await supabase.auth.getUser()).data.user?.id }]);
+
+        if (error) throw error;
+        toast({ title: "Event created successfully" });
+      }
+
+      setIsDialogOpen(false);
+      setEditingEvent(null);
+      resetForm();
+      fetchEvents();
+    } catch (err) {
+      console.error("Error saving event:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save event",
+      });
+    }
+  };
+
+  const handleEdit = (event: Event) => {
+    setEditingEvent(event);
+    setFormData({
+      title: event.title || "",
+      description: event.description || "",
+      short_description: event.short_description || "",
+      date: event.date ? new Date(event.date).toISOString().slice(0, 16) : "",
+      end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : "",
+      location: event.location || "",
+      is_online: event.is_online || false,
+      capacity: event.capacity || 50,
+      price: event.price || 0,
+      currency: event.currency || "USD",
+      image_url: event.image_url || "",
+      tags: event.tags || [],
+      status: event.status || "draft",
+      member_free_access: event.member_free_access || false,
+      transformation_only: event.transformation_only || false,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (eventId: string) => {
+    try {
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+      
+      toast({ title: "Event deleted successfully" });
+      fetchEvents();
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete event",
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      short_description: "",
+      date: "",
+      end_date: "",
+      location: "",
+      is_online: false,
+      capacity: 50,
+      price: 0,
+      currency: "USD",
+      image_url: "",
+      tags: [],
+      status: "draft",
+      member_free_access: false,
+      transformation_only: false,
+    });
+    setTagInput("");
+  };
+
+  const addTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, tagInput.trim()],
+      });
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter(tag => tag !== tagToRemove),
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "published": return "success";
+      case "draft": return "warning";
+      case "cancelled": return "destructive";
+      case "completed": return "default";
+      default: return "secondary";
+    }
+  };
 
   return (
     <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-display font-bold mb-2">Events</h1>
+          <h1 className="text-3xl font-bold">Events Management</h1>
           <p className="text-muted-foreground">
-            Create and manage platform events.
+            Create and manage events for your community
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingEvent(null);
+            resetForm();
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={() => {
+              setEditingEvent(null);
+              resetForm();
+            }}>
+              <Plus className="mr-2 h-4 w-4" />
               Create Event
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
-              <DialogDescription>
-                Fill in the details to create a new event.
-              </DialogDescription>
+              <DialogTitle>
+                {editingEvent ? "Edit Event" : "Create New Event"}
+              </DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Event Title</Label>
-                <Input id="title" placeholder="e.g., Shadow Work Workshop" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input id="date" type="date" />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <Label htmlFor="title">Event Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="time">Time</Label>
-                  <Input id="time" type="time" />
+                
+                <div className="md:col-span-2">
+                  <Label htmlFor="short_description">Short Description</Label>
+                  <Input
+                    id="short_description"
+                    value={formData.short_description}
+                    onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                  />
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="location">Location</Label>
-                <Input id="location" placeholder="e.g., Online via Zoom" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" placeholder="Event description..." rows={4} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="capacity">Capacity</Label>
-                  <Input id="capacity" type="number" placeholder="50" />
+                
+                <div className="md:col-span-2">
+                  <Label htmlFor="description">Detailed Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={5}
+                  />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="price">Price (USD)</Label>
-                  <Input id="price" type="number" placeholder="49" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
+                
                 <div>
-                  <Label>Free for Transformation Members</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Transformation tier members get free access
-                  </p>
+                  <Label htmlFor="date">Start Date & Time</Label>
+                  <Input
+                    id="date"
+                    type="datetime-local"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    required
+                  />
                 </div>
-                <Switch />
+                
+                <div>
+                  <Label htmlFor="end_date">End Date & Time</Label>
+                  <Input
+                    id="end_date"
+                    type="datetime-local"
+                    value={formData.end_date}
+                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
+                
+                <div className="flex items-end space-x-2">
+                  <div className="flex-1">
+                    <Label htmlFor="capacity">Capacity</Label>
+                    <Input
+                      id="capacity"
+                      type="number"
+                      value={formData.capacity}
+                      onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Switch
+                      id="is_online"
+                      checked={formData.is_online}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_online: checked })}
+                    />
+                    <Label htmlFor="is_online">Online Event</Label>
+                  </div>
+                </div>
+                
+                <div className="flex items-end space-x-2">
+                  <div className="flex-1">
+                    <Label htmlFor="price">Price</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="currency">Currency</Label>
+                    <Select 
+                      value={formData.currency} 
+                      onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="GBP">GBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Label htmlFor="image_url">Image URL</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="image_url"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    />
+                    <Button type="button" variant="outline" size="icon">
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2">
+                  <Label>Tags</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                      placeholder="Add a tag and press Enter"
+                    />
+                    <Button type="button" onClick={addTag} variant="outline">
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="gap-1">
+                        {tag}
+                        <button 
+                          type="button" 
+                          onClick={() => removeTag(tag)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="member_free_access">Free for Transformation Members</Label>
+                    <Switch
+                      id="member_free_access"
+                      checked={formData.member_free_access}
+                      onCheckedChange={(checked) => setFormData({ ...formData, member_free_access: checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="transformation_only">Transformation Members Only</Label>
+                    <Switch
+                      id="transformation_only"
+                      checked={formData.transformation_only}
+                      onCheckedChange={(checked) => setFormData({ ...formData, transformation_only: checked })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={(value) => setFormData({ ...formData, status: value as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="published">Published</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => setIsCreateDialogOpen(false)}>
-                Create Event
-              </Button>
-            </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingEvent ? "Update Event" : "Create Event"}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : (
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Total Events</p>
-            <p className="text-2xl font-bold">{mockEvents.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Published</p>
-            <p className="text-2xl font-bold">
-              {mockEvents.filter((e) => e.status === "published").length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Total Bookings</p>
-            <p className="text-2xl font-bold">
-              {mockEvents.reduce((sum, e) => sum + e.booked, 0)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Revenue</p>
-            <p className="text-2xl font-bold">
-              ${mockEvents.reduce((sum, e) => sum + e.booked * e.price, 0).toLocaleString()}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Events Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+          <CardHeader>
             <CardTitle>All Events</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search events..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEvents.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{event.title}</p>
-                      {event.memberFree && (
-                        <Badge variant="secondary" className="text-xs mt-1">
-                          Free for members
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {new Date(event.date).toLocaleDateString()} at {event.time}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="truncate max-w-[150px]">{event.location}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {event.booked}/{event.capacity}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {event.price === 0 ? (
-                      <Badge variant="secondary">Free</Badge>
-                    ) : (
-                      <span>${event.price}</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={event.status === "published" ? "default" : "secondary"}
-                      className={
-                        event.status === "published"
-                          ? "bg-green-100 text-green-700"
-                          : ""
-                      }
-                    >
-                      {event.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Event
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Capacity</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {events.map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell>
+                      <div className="font-medium">{event.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {event.short_description}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {event.date ? format(new Date(event.date), "MMM d, yyyy h:mm a") : "TBD"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>
+                          {event.is_online ? "Online" : event.location || "TBD"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4" />
+                        <span>
+                          {event.spots_taken || 0}/{event.capacity || "∞"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {event.price === 0 ? "Free" : `$${event.price} ${event.currency}`}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusColor(event.status || "draft") as any}>
+                        {event.status || "draft"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(event)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/events/${event.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDelete(event.id)} 
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,0 +1,1 @@
+SELECT typname FROM pg_type WHERE typtype = 'e' AND typname = 'app_role';
