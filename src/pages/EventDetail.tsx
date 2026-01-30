@@ -9,73 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { getSupabase } from "@/lib/supabase";
-import { membershipLeadSchema, getErrorMessage, sanitizeString } from "@/lib/validation";
+import { useEventById, useCreateBooking, useSubmitMembershipLead } from "@/hooks/useEvents";
+import { membershipLeadSchema } from "@/lib/validation";
 import { Calendar, MapPin, Users, Clock, ArrowLeft, Crown, Phone, Check, Loader2 } from "lucide-react";
-
-// Mock event data (will be replaced with real data)
-const mockEvent = {
-  id: "1",
-  title: "Shadow Integration Workshop",
-  description: `Join us for a transformative workshop where you'll learn to embrace and integrate the shadow aspects of your personality.
-
-## What You'll Experience
-
-- **Guided Shadow Work Exercises**: Safely explore the parts of yourself you've kept hidden
-- **Group Processing**: Share and witness in a supportive container
-- **Integration Practices**: Learn tools to continue the work after the workshop
-- **NewMe AI Session**: A personalized AI-led integration session
-
-## Who This Is For
-
-This workshop is perfect for those who:
-- Feel stuck in repeating patterns
-- Want to understand their triggers better
-- Are ready to embrace all parts of themselves
-- Seek deeper self-awareness
-
-## What's Included
-
-- 3-hour live workshop
-- Workbook and exercises
-- Recording access for 30 days
-- Follow-up NewMe AI session`,
-  short_description: "Explore and integrate your shadow aspects through guided exercises and group work.",
-  date: "2026-02-15T14:00:00Z",
-  end_date: "2026-02-15T17:00:00Z",
-  location: "Online via Zoom",
-  is_online: true,
-  capacity: 50,
-  spots_taken: 38,
-  price: 49,
-  currency: "USD",
-  image_url: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=600&q=80",
-  gallery_images: [
-    "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=600&q=80",
-    "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=600&q=80",
-  ],
-  tags: ["Workshop", "Shadow Work", "Online"],
-  member_free_access: false,
-  transformation_only: false,
-};
+import { format } from "date-fns";
+import { PageLoader } from "@/components/ui/loading-skeleton";
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  return format(date, "EEEE, MMMM d, yyyy");
 }
 
 function formatTime(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  return format(date, "h:mm a");
 }
 
 export default function EventDetail() {
@@ -84,15 +31,42 @@ export default function EventDetail() {
   const { user, subscription } = useAuth();
   const { toast } = useToast();
   
-  const [isBooking, setIsBooking] = useState(false);
+  const { data: event, isLoading, error } = useEventById(id || "");
+  const createBooking = useCreateBooking();
+  const submitLead = useSubmitMembershipLead();
+  
   const [isMembershipFormOpen, setIsMembershipFormOpen] = useState(false);
   const [membershipForm, setMembershipForm] = useState({ fullName: "", whatsapp: "" });
   const [formErrors, setFormErrors] = useState<{ fullName?: string; whatsapp?: string }>({});
-  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
 
-  const event = mockEvent; // Will be fetched from DB
-  const spotsLeft = event.capacity - event.spots_taken;
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <PageLoader />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !event) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <Button variant="ghost" className="mb-6" onClick={() => navigate("/events")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Events
+          </Button>
+          <div className="text-center text-destructive">
+            <p>Event not found or failed to load.</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const spotsLeft = event.capacity ? event.capacity - (event.spots_taken || 0) : null;
   const isTransformationMember = subscription?.tier === "transformation";
   const isFreeForMember = event.member_free_access && isTransformationMember;
 
@@ -106,30 +80,19 @@ export default function EventDetail() {
       return;
     }
 
-    setIsBooking(true);
     try {
-      const supabase = await getSupabase();
-      if (!supabase) {
-        throw new Error("Backend not configured");
-      }
-
-      // For now, just create a pending booking
-      // PayPal integration will be added later
-      const { error } = await supabase.from("event_bookings").insert({
-        event_id: event.id,
-        user_id: user.id,
-        status: "pending",
-        amount_paid: isFreeForMember ? 0 : event.price,
-        is_member_access: isFreeForMember,
+      await createBooking.mutateAsync({
+        eventId: event.id,
+        userId: user.id,
+        isMemberAccess: isFreeForMember || false,
+        amountPaid: isFreeForMember ? 0 : (event.price || 0),
       });
-
-      if (error) throw error;
 
       toast({
         title: "Booking created!",
         description: isFreeForMember 
           ? "You have free access as a Transformation member." 
-          : "Please complete payment to confirm your spot.",
+          : `Your booking for "${event.title}" has been created. Complete payment to confirm.`,
       });
 
       navigate("/dashboard");
@@ -138,25 +101,16 @@ export default function EventDetail() {
       toast({
         variant: "destructive",
         title: "Booking failed",
-        description: getErrorMessage(err),
+        description: err instanceof Error ? err.message : "Please try again.",
       });
-    } finally {
-      setIsBooking(false);
     }
   };
 
   const handleMembershipLead = async () => {
-    // Clear previous errors
     setFormErrors({});
 
-    // Sanitize inputs
-    const sanitizedData = {
-      fullName: sanitizeString(membershipForm.fullName),
-      whatsapp: sanitizeString(membershipForm.whatsapp),
-    };
-
     // Validate with zod schema
-    const validationResult = membershipLeadSchema.safeParse(sanitizedData);
+    const validationResult = membershipLeadSchema.safeParse(membershipForm);
     
     if (!validationResult.success) {
       const errors: { fullName?: string; whatsapp?: string } = {};
@@ -168,21 +122,13 @@ export default function EventDetail() {
       return;
     }
 
-    setIsSubmittingLead(true);
     try {
-      const supabase = await getSupabase();
-      if (!supabase) {
-        throw new Error("Backend not configured");
-      }
-
-      const { error } = await supabase.from("membership_leads").insert({
-        full_name: validationResult.data.fullName,
-        whatsapp_number: validationResult.data.whatsapp,
-        event_id: event.id,
+      await submitLead.mutateAsync({
+        fullName: validationResult.data.fullName,
+        whatsapp: validationResult.data.whatsapp,
+        eventId: event.id,
         source: "event_page",
       });
-
-      if (error) throw error;
 
       setLeadSubmitted(true);
       toast({
@@ -194,10 +140,8 @@ export default function EventDetail() {
       toast({
         variant: "destructive",
         title: "Submission failed",
-        description: getErrorMessage(err),
+        description: err instanceof Error ? err.message : "Please try again.",
       });
-    } finally {
-      setIsSubmittingLead(false);
     }
   };
 
@@ -215,13 +159,19 @@ export default function EventDetail() {
           <div className="lg:col-span-2 space-y-6">
             {/* Hero Image */}
             <div className="relative rounded-2xl overflow-hidden aspect-video">
-              <img
-                src={event.image_url || ""}
-                alt={event.title}
-                className="w-full h-full object-cover"
-              />
+              {event.image_url ? (
+                <img
+                  src={event.image_url}
+                  alt={event.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
+                  <Calendar className="h-20 w-20 text-white/30" />
+                </div>
+              )}
               <div className="absolute top-4 left-4 flex gap-2 flex-wrap">
-                {event.tags.map((tag) => (
+                {event.tags?.map((tag) => (
                   <Badge key={tag} className="bg-primary/90 text-primary-foreground">
                     {tag}
                   </Badge>
@@ -240,35 +190,37 @@ export default function EventDetail() {
               <h1 className="text-3xl md:text-4xl font-display font-bold mb-4">
                 {event.title}
               </h1>
-              <div className="prose prose-sm max-w-none text-muted-foreground">
-                {event.description.split("\n").map((line, i) => {
-                  if (line.startsWith("## ")) {
-                    return <h2 key={i} className="text-xl font-semibold text-foreground mt-6 mb-3">{line.replace("## ", "")}</h2>;
-                  }
-                  if (line.startsWith("- **")) {
-                    const [bold, rest] = line.replace("- **", "").split("**:");
-                    return (
-                      <p key={i} className="flex items-start gap-2 mb-2">
-                        <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                        <span><strong className="text-foreground">{bold}:</strong>{rest}</span>
-                      </p>
-                    );
-                  }
-                  if (line.startsWith("- ")) {
-                    return (
-                      <p key={i} className="flex items-start gap-2 mb-2">
-                        <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                        <span>{line.replace("- ", "")}</span>
-                      </p>
-                    );
-                  }
-                  return line ? <p key={i} className="mb-2">{line}</p> : null;
-                })}
-              </div>
+              {event.description && (
+                <div className="prose prose-sm max-w-none text-muted-foreground">
+                  {event.description.split("\n").map((line, i) => {
+                    if (line.startsWith("## ")) {
+                      return <h2 key={i} className="text-xl font-semibold text-foreground mt-6 mb-3">{line.replace("## ", "")}</h2>;
+                    }
+                    if (line.startsWith("- **")) {
+                      const [bold, rest] = line.replace("- **", "").split("**:");
+                      return (
+                        <p key={i} className="flex items-start gap-2 mb-2">
+                          <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                          <span><strong className="text-foreground">{bold}:</strong>{rest}</span>
+                        </p>
+                      );
+                    }
+                    if (line.startsWith("- ")) {
+                      return (
+                        <p key={i} className="flex items-start gap-2 mb-2">
+                          <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
+                          <span>{line.replace("- ", "")}</span>
+                        </p>
+                      );
+                    }
+                    return line ? <p key={i} className="mb-2">{line}</p> : null;
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Gallery */}
-            {event.gallery_images.length > 0 && (
+            {event.gallery_images && event.gallery_images.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-4">Event Gallery</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -287,7 +239,7 @@ export default function EventDetail() {
             <Card className="glass-card">
               <CardHeader>
                 <CardTitle className="text-2xl">
-                  {isFreeForMember ? (
+                  {event.price === 0 || isFreeForMember ? (
                     <span className="text-gradient-primary">Free Access</span>
                   ) : (
                     <span className="text-gradient-primary">${event.price}</span>
@@ -296,33 +248,37 @@ export default function EventDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatDate(event.date)}</span>
-                  </div>
+                  {event.date && (
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{formatDate(event.date)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatTime(event.date)}</span>
+                    <span>{event.date ? formatTime(event.date) : "TBD"}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{event.location}</span>
+                    <span>{event.is_online ? "Online" : event.location}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{spotsLeft} spots remaining</span>
-                  </div>
+                  {spotsLeft !== null && (
+                    <div className="flex items-center gap-3">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>{spotsLeft} spots remaining</span>
+                    </div>
+                  )}
                 </div>
 
-                {spotsLeft > 0 ? (
+                {spotsLeft !== null && spotsLeft > 0 ? (
                   <div className="space-y-3 pt-4">
                     <Button
                       className="w-full bg-gradient-primary hover:opacity-90"
                       size="lg"
                       onClick={handleBookTicket}
-                      disabled={isBooking}
+                      disabled={createBooking.isPending}
                     >
-                      {isBooking ? (
+                      {createBooking.isPending ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Processing...
@@ -400,9 +356,9 @@ export default function EventDetail() {
                             <Button
                               className="w-full bg-gradient-primary hover:opacity-90"
                               onClick={handleMembershipLead}
-                              disabled={isSubmittingLead}
+                              disabled={submitLead.isPending}
                             >
-                              {isSubmittingLead ? (
+                              {submitLead.isPending ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                   Submitting...

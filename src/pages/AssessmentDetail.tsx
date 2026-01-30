@@ -9,10 +9,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { PageLoader } from "@/components/ui/loading-skeleton";
+import { useSubmitAssessmentResult } from "@/hooks/useAssessments";
 import { ArrowLeft, ArrowRight, Brain, Heart, Compass, Moon, Star, Sparkles, Clock, CheckCircle, Loader2 } from "lucide-react";
 
-// Color mappings for Tailwind (static classes for purging)
+// Color mappings for Tailwind
 const colorClasses: Record<string, { bg: string; text: string }> = {
   primary: { bg: "bg-primary/10", text: "text-primary" },
   teal: { bg: "bg-teal/10", text: "text-teal" },
@@ -73,9 +73,9 @@ const assessmentsData: Record<string, {
       { id: 1, question: "I feel most loved when my partner...", options: ["Tells me they love me", "Gives me a thoughtful gift", "Spends quality time with me", "Does something helpful for me", "Gives me a hug or physical affection"] },
       { id: 2, question: "I'm most hurt when my partner...", options: ["Criticizes me or speaks harshly", "Forgets special occasions", "Is distracted when we're together", "Doesn't help when I need it", "Avoids physical closeness"] },
       { id: 3, question: "To show love, I most naturally...", options: ["Express appreciation verbally", "Give meaningful gifts", "Plan special time together", "Do things to help", "Give hugs and affection"] },
-      { id: 4, question: "In a perfect world, my partner would...", options: ["Tell me what they appreciate about me daily", "Surprise me with thoughtful gifts", "Always prioritize our time together", "Take things off my plate without being asked", "Be physically affectionate throughout the day"] },
+      { id: 4, question: "In a perfect world, my partner would...", options: ["Tell me what they appreciate about me daily", "Surprise me with thoughtful gifts", "Always prioritize our time together", "Take things off my plate without being asked", "Be physically affectionate throughout day"] },
       { id: 5, question: "I feel disconnected when...", options: ["We go without meaningful conversation", "They seem thoughtless about occasions", "We're always busy with separate activities", "I feel like I'm doing everything alone", "There's no physical intimacy"] },
-      { id: 6, question: "The most memorable relationship moment was when...", options: ["They said something that touched my heart", "They gave me the perfect unexpected gift", "We had an amazing day just the two of us", "They went out of their way to help me", "We shared tender physical moments"] },
+      { id: 6, question: "The most memorable relationship moment was when...", options: ["They said something that touched my heart", "They gave me the perfect unexpected gift", "We had an amazing day just be two of us", "They went out of their way to help me", "We shared tender physical moments"] },
       { id: 7, question: "I would rather my partner...", options: ["Write me a heartfelt letter", "Buy me something I've wanted", "Take a trip with me", "Handle a stressful task for me", "Hold my hand more often"] },
       { id: 8, question: "When I'm stressed, I need my partner to...", options: ["Tell me it will be okay and they believe in me", "Bring me something to cheer me up", "Just be present with me", "Take something off my list", "Give me a comforting embrace"] },
     ],
@@ -109,7 +109,7 @@ const assessmentsData: Record<string, {
     ],
     resultCategories: [
       { range: [0, 25], title: "The Healer", description: "Your purpose is rooted in service and healing. You're called to make a direct difference in people's lives through care, support, and transformation." },
-      { range: [26, 50], title: "The Creator", description: "Your purpose is rooted in creative expression. You're called to bring beauty, innovation, and authentic self-expression into the world." },
+      { range: [26, 50], title: "The Creator", description: "Your purpose is rooted in creative expression. You're called to bring beauty, innovation, and authentic self-expression into world." },
       { range: [51, 75], title: "The Builder", description: "Your purpose is rooted in achievement and problem-solving. You're called to create systems, solve problems, and build things that matter." },
       { range: [76, 100], title: "The Connector", description: "Your purpose is rooted in relationships and community. You're called to bring people together and create understanding between individuals and groups." },
     ],
@@ -118,7 +118,7 @@ const assessmentsData: Record<string, {
     id: "emotional-iq",
     title: "Emotional Intelligence",
     description: "Measure your ability to understand and manage emotions effectively.",
-    longDescription: "Emotional intelligence is your ability to recognize, understand, and manage your own emotions while also being aware of and influencing the emotions of others. This assessment measures the key components of EQ.",
+    longDescription: "Emotional intelligence is your ability to recognize, understand, and manage your own emotions while also being aware of and influencing the emotions of others. This assessment measures of key components of EQ.",
     icon: Brain,
     duration: "15 min",
     color: "purple",
@@ -128,7 +128,7 @@ const assessmentsData: Record<string, {
       { id: 3, question: "When someone shares their problems, you tend to...", options: ["Offer solutions immediately", "Feel uncomfortable and change subjects", "Listen and acknowledge their feelings", "Really understand their perspective and validate them"] },
       { id: 4, question: "Under stress, your emotional reactions are...", options: ["Intense and hard to control", "Suppressed until they explode", "Noticeable but manageable", "Acknowledged and regulated effectively"] },
       { id: 5, question: "You can accurately identify your emotions...", options: ["Rarely—I often feel 'bad' or 'good' without more detail", "Sometimes—I know basic emotions", "Usually—I can name most of what I feel", "Almost always—I have nuanced emotional vocabulary"] },
-      { id: 6, question: "When receiving criticism, you...", options: ["Get defensive or upset", "Shut down emotionally", "Feel hurt but consider the feedback", "Separate the feedback from personal attack and evaluate it"] },
+      { id: 6, question: "When receiving criticism, you...", options: ["Get defensive or upset", "Shut down emotionally", "Feel hurt but consider of feedback", "Separate the feedback from personal attack and evaluate it"] },
       { id: 7, question: "You're able to motivate yourself when discouraged...", options: ["Rarely—I need external motivation", "Sometimes—depends on the situation", "Usually—I can rally myself", "Almost always—I manage my motivation well"] },
       { id: 8, question: "In group settings, you're typically...", options: ["Unaware of the emotional dynamics", "Somewhat aware but unsure how to respond", "Aware and can adjust your behavior", "Highly attuned and can influence the group mood"] },
       { id: 9, question: "When conflicts arise, you...", options: ["Avoid them or escalate them", "Get caught up in emotions", "Try to stay calm but struggle", "Can manage your emotions and address issues constructively"] },
@@ -157,11 +157,11 @@ const assessmentsData: Record<string, {
       { id: 5, question: "Your relationship with play and spontaneity is...", options: ["I don't really play anymore", "I feel guilty when I'm not productive", "I can only play when everything is done", "I'm learning to have more fun", "I embrace play regularly"] },
       { id: 6, question: "When you're overwhelmed, you tend to...", options: ["Shut down completely", "Overwork to distract myself", "Seek comfort in unhealthy ways", "Ask for help", "Self-soothe effectively"] },
       { id: 7, question: "The message you needed to hear as a child was...", options: ["You are safe", "You are seen and matter", "It's okay to be you", "You are loved no matter what", "I received these messages"] },
-      { id: 8, question: "Your relationship with self-compassion is...", options: ["I'm very hard on myself", "I'm critical but trying to change", "I'm compassionate sometimes", "I treat myself kindly most of the time", "I have a strong self-compassion practice"] },
+      { id: 8, question: "Your relationship with self-compassion is...", options: ["I'm very hard on myself", "I'm critical but trying to change", "I'm compassionate sometimes", "I treat myself kindly most of time", "I have a strong self-compassion practice"] },
     ],
     resultCategories: [
       { range: [0, 25], title: "Wounded Inner Child", description: "Your inner child carries significant wounds that likely affect your daily life. Prioritizing healing work could bring profound transformation." },
-      { range: [26, 50], title: "Healing Inner Child", description: "You've begun the healing journey but there's more work to do. Continue nurturing your inner child with patience and compassion." },
+      { range: [26, 50], title: "Healing Inner Child", description: "You've begun to healing journey but there's more work to do. Continue nurturing your inner child with patience and compassion." },
       { range: [51, 75], title: "Integrating Inner Child", description: "You've done significant inner child work. Continue integrating these healed aspects into your adult self." },
       { range: [76, 100], title: "Healed Inner Child", description: "Your inner child feels safe and integrated. You've done profound healing work that benefits all areas of your life." },
     ],
@@ -198,12 +198,12 @@ export default function AssessmentDetail() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const submitResult = useSubmitAssessmentResult();
 
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [isComplete, setIsComplete] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ title: string; description: string; score: number } | null>(null);
 
   const assessment = id ? assessmentsData[id] : null;
@@ -237,7 +237,7 @@ export default function AssessmentDetail() {
     if (currentQuestion < totalQuestions - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      calculateResult();
+      calculateAndSubmitResult();
     }
   };
 
@@ -247,33 +247,55 @@ export default function AssessmentDetail() {
     }
   };
 
-  const calculateResult = () => {
-    setIsSubmitting(true);
-    
+  const calculateAndSubmitResult = async () => {
+    if (!user || !profile) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save your results.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Calculate score based on answers
     const totalPoints = Object.values(answers).reduce((sum, val) => sum + val, 0);
-    const maxPoints = totalQuestions * 3; // Max 3 points per question (4 options: 0-3)
+    const maxPoints = totalQuestions * 3;
     const percentage = Math.round((totalPoints / maxPoints) * 100);
 
-    // Find the appropriate result category
+    // Find appropriate result category
     const category = assessment.resultCategories.find(
       cat => percentage >= cat.range[0] && percentage <= cat.range[1]
     ) || assessment.resultCategories[assessment.resultCategories.length - 1];
 
-    setTimeout(() => {
+    try {
+      await submitResult.mutateAsync({
+        assessmentId: assessment.id,
+        userId: user.id,
+        answers,
+        scores: { total_score: percentage },
+        resultNarrative: category.description,
+        savedToMemory: profile.memory_consent ?? true,
+      });
+
       setResult({
         title: category.title,
         description: category.description,
         score: percentage,
       });
       setIsComplete(true);
-      setIsSubmitting(false);
 
       toast({
         title: "Assessment Complete!",
         description: "Your results have been saved.",
       });
-    }, 1500);
+    } catch (err) {
+      console.error("Assessment submission error:", err);
+      toast({
+        variant: "destructive",
+        title: "Failed to save results",
+        description: err instanceof Error ? err.message : "Please try again.",
+      });
+    }
   };
 
   const handleRetake = () => {
@@ -336,7 +358,7 @@ export default function AssessmentDetail() {
                 </div>
               </div>
 
-              {user && profile && (
+              {profile && (
                 <p className="text-xs text-center text-muted-foreground mt-6">
                   {profile.memory_consent 
                     ? "Your results have been saved to your profile."
@@ -444,15 +466,10 @@ export default function AssessmentDetail() {
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={answers[currentQ.id] === undefined || isSubmitting}
+                  disabled={answers[currentQ.id] === undefined}
                   className="bg-gradient-primary hover:opacity-90"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Calculating...
-                    </>
-                  ) : currentQuestion === totalQuestions - 1 ? (
+                  {currentQuestion === totalQuestions - 1 ? (
                     <>
                       Complete
                       <CheckCircle className="ml-2 h-4 w-4" />

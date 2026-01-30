@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -7,148 +7,47 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, Users, Search, Filter } from "lucide-react";
-
-interface Event {
-  id: string;
-  title: string;
-  short_description: string | null;
-  date: string;
-  location: string | null;
-  is_online: boolean;
-  capacity: number;
-  spots_taken: number;
-  price: number;
-  currency: string;
-  image_url: string | null;
-  tags: string[];
-  member_free_access: boolean;
-}
+import { useEvents, type Event } from "@/hooks/useEvents";
+import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
 
 function formatDate(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return format(date, "MMM d, yyyy");
 }
 
 function formatTime(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return format(date, "h:mm a");
 }
 
-// Mock events for display (will be replaced with real data)
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Shadow Integration Workshop",
-    short_description: "Explore and integrate your shadow aspects through guided exercises and group work.",
-    date: "2026-02-15T14:00:00Z",
-    location: "Online",
-    is_online: true,
-    capacity: 50,
-    spots_taken: 38,
-    price: 49,
-    currency: "USD",
-    image_url: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=600&q=80",
-    tags: ["Workshop", "Shadow Work"],
-    member_free_access: false,
-  },
-  {
-    id: "2",
-    title: "Full Moon Transformation Circle",
-    short_description: "Join us for a powerful full moon ritual and transformation circle in Dubai.",
-    date: "2026-02-12T20:00:00Z",
-    location: "Dubai, UAE",
-    is_online: false,
-    capacity: 30,
-    spots_taken: 22,
-    price: 75,
-    currency: "USD",
-    image_url: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&q=80",
-    tags: ["In-Person", "Moon Ritual"],
-    member_free_access: true,
-  },
-  {
-    id: "3",
-    title: "Couples Compatibility Deep Dive",
-    short_description: "An AI-led exploration of relationship dynamics and compatibility patterns.",
-    date: "2026-02-20T18:00:00Z",
-    location: "Online",
-    is_online: true,
-    capacity: 20,
-    spots_taken: 14,
-    price: 99,
-    currency: "USD",
-    image_url: "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?w=600&q=80",
-    tags: ["Couples", "Relationship"],
-    member_free_access: true,
-  },
-  {
-    id: "4",
-    title: "Inner Child Healing Journey",
-    short_description: "A gentle yet powerful journey to reconnect with and heal your inner child.",
-    date: "2026-02-25T16:00:00Z",
-    location: "Online",
-    is_online: true,
-    capacity: 40,
-    spots_taken: 25,
-    price: 59,
-    currency: "USD",
-    image_url: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&q=80",
-    tags: ["Workshop", "Inner Child"],
-    member_free_access: false,
-  },
-  {
-    id: "5",
-    title: "Authenticity Breakthrough Intensive",
-    short_description: "A full-day intensive designed to break through barriers to authentic self-expression.",
-    date: "2026-03-01T10:00:00Z",
-    location: "Online",
-    is_online: true,
-    capacity: 25,
-    spots_taken: 8,
-    price: 149,
-    currency: "USD",
-    image_url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80",
-    tags: ["Intensive", "Authenticity"],
-    member_free_access: true,
-  },
-];
-
 export default function Events() {
-  const [events, setEvents] = useState<Event[]>(mockEvents);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>(mockEvents);
+  const { data: events, isLoading, error } = useEvents();
+  const { subscription } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Filter events based on search and type
-    let filtered = events;
+  const isTransformationMember = subscription?.tier === "transformation";
 
+  const filteredEvents = events?.filter((event) => {
+    if (!searchQuery && typeFilter === "all") return true;
+
+    let matchesSearch = true;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (e) =>
-          e.title.toLowerCase().includes(query) ||
-          e.short_description?.toLowerCase().includes(query) ||
-          e.tags.some((t) => t.toLowerCase().includes(query))
-      );
+      matchesSearch =
+        event.title?.toLowerCase().includes(query) ||
+        event.short_description?.toLowerCase().includes(query) ||
+        event.tags?.some((t) => t.toLowerCase().includes(query));
     }
 
+    let matchesType = true;
     if (typeFilter !== "all") {
-      filtered = filtered.filter((e) =>
-        typeFilter === "online" ? e.is_online : !e.is_online
-      );
+      matchesType = typeFilter === "online" ? event.is_online : !event.is_online;
     }
 
-    setFilteredEvents(filtered);
-  }, [events, searchQuery, typeFilter]);
+    return matchesSearch && matchesType;
+  }) || [];
 
   return (
     <Layout>
@@ -189,9 +88,13 @@ export default function Events() {
         </div>
 
         {/* Events Grid */}
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Loading events...
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading events...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-destructive">
+            <p>Failed to load events. Please try again later.</p>
           </div>
         ) : filteredEvents.length === 0 ? (
           <div className="text-center py-12">
@@ -203,29 +106,37 @@ export default function Events() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEvents.map((event) => {
-              const spotsLeft = event.capacity - event.spots_taken;
+              const spotsLeft = event.capacity ? event.capacity - (event.spots_taken || 0) : null;
+              const isFreeForMember = event.member_free_access && isTransformationMember;
+
               return (
                 <Card key={event.id} className="glass-card overflow-hidden group hover:shadow-lg transition-all duration-300">
                   {/* Event Image */}
                   <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={event.image_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80"}
-                      alt={event.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    {event.image_url ? (
+                      <img
+                        src={event.image_url}
+                        alt={event.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
+                        <Calendar className="h-12 w-12 text-white/50" />
+                      </div>
+                    )}
                     <div className="absolute top-3 left-3 flex gap-2 flex-wrap">
-                      {event.tags.slice(0, 2).map((tag) => (
+                      {event.tags?.slice(0, 2).map((tag) => (
                         <Badge key={tag} className="bg-primary/90 text-primary-foreground text-xs">
                           {tag}
                         </Badge>
                       ))}
                     </div>
-                    {spotsLeft <= 10 && (
+                    {spotsLeft !== null && spotsLeft <= 10 && (
                       <Badge className="absolute top-3 right-3 bg-destructive text-destructive-foreground text-xs">
                         {spotsLeft} spots left
                       </Badge>
                     )}
-                    {event.member_free_access && (
+                    {isFreeForMember && (
                       <Badge className="absolute bottom-3 right-3 bg-gold text-gold-foreground text-xs">
                         Free for Members
                       </Badge>
@@ -243,15 +154,15 @@ export default function Events() {
                     <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>{formatDate(event.date)} at {formatTime(event.date)}</span>
+                        <span>{event.date ? `${formatDate(event.date)} at ${formatTime(event.date)}` : "TBD"}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        <span>{event.location}</span>
+                        <span>{event.is_online ? "Online" : event.location}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4" />
-                        <span>{spotsLeft} of {event.capacity} spots available</span>
+                        <span>{spotsLeft !== null ? `${spotsLeft} of ${event.capacity} spots available` : "Open registration"}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -259,14 +170,16 @@ export default function Events() {
                   <CardFooter className="flex flex-col gap-2 pt-0">
                     <div className="flex items-center justify-between w-full mb-2">
                       <span className="text-2xl font-bold text-gradient-primary">
-                        ${event.price}
+                        {event.price === 0 || isFreeForMember ? (
+                          <span>Free</span>
+                        ) : (
+                          <span>${event.price}</span>
+                        )}
                       </span>
                     </div>
-                    <div className="flex gap-2 w-full">
-                      <Button className="flex-1 bg-gradient-primary hover:opacity-90" asChild>
-                        <Link to={`/events/${event.id}`}>View Details</Link>
-                      </Button>
-                    </div>
+                    <Button className="flex-1 bg-gradient-primary hover:opacity-90" asChild>
+                      <Link to={`/events/${event.id}`}>View Details</Link>
+                    </Button>
                   </CardFooter>
                 </Card>
               );
