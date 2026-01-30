@@ -1,0 +1,1 @@
+CREATE TYPE public.content_type AS ENUM ('audio', 'youtube', 'article');

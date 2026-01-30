@@ -1,0 +1,1 @@
+CREATE TYPE public.message_role AS ENUM ('user', 'assistant', 'system');

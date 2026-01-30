@@ -1,0 +1,1 @@
+CREATE TYPE public.session_status AS ENUM ('active', 'ended', 'interrupted');

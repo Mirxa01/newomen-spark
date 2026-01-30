@@ -1,0 +1,1 @@
+CREATE TYPE public.challenge_status AS ENUM ('pending', 'active', 'completed');
