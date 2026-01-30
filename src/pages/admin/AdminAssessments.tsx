@@ -154,7 +154,7 @@ export default function AdminAssessments() {
       is_active: assessment.is_active ?? true,
       category: assessment.category || "",
       tags: assessment.tags || [],
-      questions: Array.isArray(assessment.questions) ? assessment.questions : [],
+      questions: Array.isArray(assessment.questions) ? (assessment.questions as { question: string; options: string[]; }[]) : [],
       scoring_logic: assessment.scoring_logic || {},
       result_narratives: assessment.result_narratives || {},
     });
