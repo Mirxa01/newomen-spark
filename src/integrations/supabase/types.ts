@@ -127,69 +127,6 @@ export type Database = {
         }
         Relationships: []
       }
-      couples_challenges: {
-        Row: {
-          compatibility_result: Json | null
-          completed_at: string | null
-          created_at: string
-          expires_at: string | null
-          id: string
-          invite_code: string
-          inviter_assessment_id: string | null
-          inviter_user_id: string
-          partner_assessment_id: string | null
-          partner_email: string | null
-          partner_user_id: string | null
-          status: string | null
-          updated_at: string
-        }
-        Insert: {
-          compatibility_result?: Json | null
-          completed_at?: string | null
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          invite_code: string
-          inviter_assessment_id?: string | null
-          inviter_user_id: string
-          partner_assessment_id?: string | null
-          partner_email?: string | null
-          partner_user_id?: string | null
-          status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          compatibility_result?: Json | null
-          completed_at?: string | null
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          invite_code?: string
-          inviter_assessment_id?: string | null
-          inviter_user_id?: string
-          partner_assessment_id?: string | null
-          partner_email?: string | null
-          partner_user_id?: string | null
-          status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "couples_challenges_inviter_user_id_fkey"
-            columns: ["inviter_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "couples_challenges_partner_user_id_fkey"
-            columns: ["partner_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       event_bookings: {
         Row: {
           amount_paid: number | null
@@ -359,57 +296,6 @@ export type Database = {
           },
         ]
       }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          deleted_at: string | null
-          id: string
-          metadata: Json | null
-          role: string
-          saved_to_memory: boolean | null
-          session_id: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          deleted_at?: string | null
-          id?: string
-          metadata?: Json | null
-          role: string
-          saved_to_memory?: boolean | null
-          session_id: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          deleted_at?: string | null
-          id?: string
-          metadata?: Json | null
-          role?: string
-          saved_to_memory?: boolean | null
-          session_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       onboarding_questions: {
         Row: {
           category: string | null
@@ -509,53 +395,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sessions: {
-        Row: {
-          created_at: string
-          duration_seconds: number | null
-          id: string
-          intensity_preference: string | null
-          messages_count: number | null
-          status: string | null
-          summary: string | null
-          summary_generated_at: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          duration_seconds?: number | null
-          id?: string
-          intensity_preference?: string | null
-          messages_count?: number | null
-          status?: string | null
-          summary?: string | null
-          summary_generated_at?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          duration_seconds?: number | null
-          id?: string
-          intensity_preference?: string | null
-          messages_count?: number | null
-          status?: string | null
-          summary?: string | null
-          summary_generated_at?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       subscriptions: {
         Row: {
           created_at: string
@@ -598,53 +437,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_progress: {
-        Row: {
-          assessments_completed: string[] | null
-          created_at: string
-          daily_streak_days: number | null
-          id: string
-          last_active_at: string | null
-          total_sessions: number | null
-          total_voice_minutes: number | null
-          updated_at: string
-          user_id: string
-          wellness_content_completed: string[] | null
-        }
-        Insert: {
-          assessments_completed?: string[] | null
-          created_at?: string
-          daily_streak_days?: number | null
-          id?: string
-          last_active_at?: string | null
-          total_sessions?: number | null
-          total_voice_minutes?: number | null
-          updated_at?: string
-          user_id: string
-          wellness_content_completed?: string[] | null
-        }
-        Update: {
-          assessments_completed?: string[] | null
-          created_at?: string
-          daily_streak_days?: number | null
-          id?: string
-          last_active_at?: string | null
-          total_sessions?: number | null
-          total_voice_minutes?: number | null
-          updated_at?: string
-          user_id?: string
-          wellness_content_completed?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_progress_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -665,74 +457,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      wellness_library: {
-        Row: {
-          audio_file_url: string | null
-          category: string | null
-          content_type: string
-          created_at: string
-          created_by: string | null
-          description: string | null
-          duration_minutes: number | null
-          id: string
-          is_active: boolean | null
-          is_featured: boolean | null
-          short_description: string | null
-          tags: string[] | null
-          thumbnail_url: string | null
-          title: string
-          updated_at: string
-          url: string | null
-          view_count: number | null
-        }
-        Insert: {
-          audio_file_url?: string | null
-          category?: string | null
-          content_type?: string
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          is_active?: boolean | null
-          is_featured?: boolean | null
-          short_description?: string | null
-          tags?: string[] | null
-          thumbnail_url?: string | null
-          title: string
-          updated_at?: string
-          url?: string | null
-          view_count?: number | null
-        }
-        Update: {
-          audio_file_url?: string | null
-          category?: string | null
-          content_type?: string
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          duration_minutes?: number | null
-          id?: string
-          is_active?: boolean | null
-          is_featured?: boolean | null
-          short_description?: string | null
-          tags?: string[] | null
-          thumbnail_url?: string | null
-          title?: string
-          updated_at?: string
-          url?: string | null
-          view_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "wellness_library_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {

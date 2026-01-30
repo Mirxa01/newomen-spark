@@ -142,7 +142,8 @@ export default function VoiceChat() {
     setIsProcessing(true);
 
     try {
-      const response = await fetch('https://pojykfjbtmpsvdkyhxbg.supabase.co/functions/v1/newme-chat', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/newme-chat`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
