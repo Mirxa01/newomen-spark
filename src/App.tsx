@@ -18,6 +18,7 @@ import AssessmentDetail from "./pages/AssessmentDetail";
 import VoiceChat from "./pages/VoiceChat";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
+import ImageStudio from "./pages/ImageStudio";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/chat" element={<VoiceChat />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/about" element={<About />} />
+            <Route path="/image-studio" element={<ImageStudio />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
