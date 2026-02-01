@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { EventImageUploader } from "@/components/admin/EventImageUploader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -379,19 +380,10 @@ export default function AdminEvents() {
                   </div>
                 </div>
                 
-                <div className="md:col-span-2">
-                  <Label htmlFor="image_url">Image URL</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="image_url"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    />
-                    <Button type="button" variant="outline" size="icon">
-                      <Upload className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                <EventImageUploader
+                  value={formData.image_url}
+                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                />
                 
                 <div className="md:col-span-2">
                   <Label>Tags</Label>
