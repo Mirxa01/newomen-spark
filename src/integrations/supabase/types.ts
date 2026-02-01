@@ -540,6 +540,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_booking: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_create_lead: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -548,6 +552,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_transformation_member: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin" | "super_admin"
